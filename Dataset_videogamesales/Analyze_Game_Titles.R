@@ -75,3 +75,63 @@ library(SnowballC)
 
 vg_names_corpus <- tm_map(vg_names_corpus, stemDocument)
 
+vg_names_corpus_clean <- tm_map(vg_names_corpus, removeNumbers)
+vg_names_corpus_clean <- tm_map(vg_names_corpus_clean, removeWords, stopwords())
+vg_names_corpus_clean <- tm_map(vg_names_corpus_clean, removePunctuation)
+
+#splitting text into words
+vg_names_dtm <- DocumentTermMatrix(vg_names_corpus_clean)
+
+#create train and test sets
+vg_names_train <- vg_names_dtm[1:11618, ]
+vg_names_test <- vg_names_dtm[11619:16598, ]
+
+vg_names_train_labels <- vg_sales_info[1:11618, ]$Sales_Category
+vg_names_test_labels <- vg_sales_info[11619:16598, ]$Sales_Category
+
+prop.table(table(vg_names_train_labels))
+prop.table(table(vg_names_test_labels))
+
+#visualizing text data
+library(wordcloud)
+wordcloud(vg_names_corpus_clean, min.freq = 50, random.order = FALSE)
+
+vg_top30 <- subset(vg_sales_info, vg_sales_info$Sales_Category == "<33%")
+
+vg_top30_corpus <- VCorpus(VectorSource(vg_top30$Name))
+vg_top30_corpus <- tm_map(vg_top30_corpus, stemDocument)
+vg_top30_corpus <- tm_map(vg_top30_corpus, content_transformer(tolower))
+vg_top30_corpus <- tm_map(vg_top30_corpus, content_transformer(removePunctuation))
+vg_top30_corpus_clean <- tm_map(vg_top30_corpus, removeNumbers)
+vg_top30_corpus_clean <- tm_map(vg_top30_corpus_clean, removeWords, stopwords())
+vg_top30_corpus_clean <- tm_map(vg_top30_corpus_clean, removePunctuation)
+
+wordcloud(vg_top30_corpus_clean, min.freq = 50, random.order = FALSE)
+
+#create indicator features for freq words
+
+vg_names_freq_words <- findFreqTerms(vg_names_train, 10)
+vg_names_freq_words_train <- vg_names_train[ , vg_names_freq_words]
+vg_names_freq_words_test <- vg_names_test[ , vg_names_freq_words]
+
+convert_counts <- function(x){
+  x <- ifelse(x>0, "Yes", "No")
+}
+
+vg_train <- apply(vg_names_freq_words_train, MARGIN = 2, convert_counts)
+vg_test <- apply(vg_names_freq_words_test, MARGIN = 2, convert_counts)
+
+#train the model
+library(e1071)
+vg_classifier <- naiveBayes(vg_train, vg_names_train_labels)
+
+#evaluate the performance
+vg_names_pred <- predict(vg_classifier, vg_test)
+
+library(gmodels)
+CrossTable(vg_names_pred, vg_names_test_labels, prop.chisq = FALSE, prop.c = FALSE, prop.r = FALSE, dnn = c('predicted', 'actual'))
+
+#improve the performance
+vg_classifier2 <- naiveBayes(vg_train, vg_names_train_labels, laplace = 2)
+vg_names_pred2 <- predict(vg_classifier2, vg_test)
+CrossTable(vg_names_pred2, vg_names_test_labels, prop.chisq = FALSE, prop.c = FALSE, prop.r = FALSE, dnn = c('predicted', 'actual'))
