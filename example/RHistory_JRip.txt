@@ -1,0 +1,72 @@
+> features<-read.csv("example.csv")
+Warning message:
+In read.table(file = file, header = header, sep = sep, quote = quote,  :
+  incomplete final line found by readTableHeader on 'example.csv'
+> View(features)
+> library(RWeka)
+Warning message:
+package ‘RWeka’ was built under R version 4.0.5 
+> m <- JRip(Class ~ FeatureA, data=example)
+Error in model.frame.default(formula = Class ~ FeatureA, data = example) : 
+  'data' must be a data.frame, environment, or list
+> m <- JRip(Class ~ FeatureA, data=features)
+Error in .jcall(o, "Ljava/lang/Class;", "getClass") : 
+  weka.core.UnsupportedAttributeTypeException: weka.classifiers.rules.JRip: Cannot handle string attributes!
+> features$class<-as.factor(features$Class)
+> features$Class<-as.factor(features$Class)
+> delete(features$class)
+Error in delete(features$class) : could not find function "delete"
+> rm(features$class)
+Error in rm(features$class) : ... must contain names or character strings
+> str(features)
+'data.frame':	3 obs. of  3 variables:
+ $ FeatureA: chr  "green" "green" "red"
+ $ Class   : Factor w/ 2 levels "A","B": 1 2 1
+ $ class   : Factor w/ 2 levels "A","B": 1 2 1
+> m <- JRip(Class ~ FeatureA, data=features)
+Error in .jcall(o, "Ljava/lang/Class;", "getClass") : 
+  weka.core.UnsupportedAttributeTypeException: weka.classifiers.rules.JRip: Cannot handle string attributes!
+> features$FeatureA<-as.factor(features$FeatureA)
+> m <- JRip(Class ~ FeatureA, data=features)
+> m
+JRIP rules:
+===========
+
+ => Class=A (3.0/1.0)
+
+Number of Rules : 1
+
+> features<-read.csv("example.csv")
+Warning message:
+In read.table(file = file, header = header, sep = sep, quote = quote,  :
+  incomplete final line found by readTableHeader on 'example.csv'
+> features<-read.csv("example.csv")
+> features$FeatureA<-as.factor(features$FeatureA)
+> features$Class<-as.factor(features$Class)
+> m <- JRip(Class ~ FeatureA, data=features)
+> m
+JRIP rules:
+===========
+
+ => Class=A (3.0/1.0)
+
+Number of Rules : 1
+
+> m <- JRip(FeatureA ~ Class, data=features)
+> m
+JRIP rules:
+===========
+
+ => FeatureA=orange (3.0/2.0)
+
+Number of Rules : 1
+
+> m <- JRip(Class ~ FeatureA, data=features)
+> m <- JRip(Class ~ ., data=features)
+> m
+JRIP rules:
+===========
+
+ => Class=A (3.0/1.0)
+
+Number of Rules : 1
