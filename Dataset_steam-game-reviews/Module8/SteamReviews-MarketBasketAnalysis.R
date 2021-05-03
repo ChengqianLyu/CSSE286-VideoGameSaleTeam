@@ -2,15 +2,15 @@
 # Module 8
 
 # NEW dataset (covers 3 YEARS' worth of data, 1.49b to 1.62b Unix timestamps): https://www.kaggle.com/luthfim/steam-reviews-dataset
-# and https://www.kaggle.com/nikdavis/steam-store-raw?select=steamspy_data.csv (still used; cant find a better/newer one with genres sadly)
+# and https://www.kaggle.com/nikdavis/steam-store-games?select=steam.csv
 
 # 1. Pre-processing
 
 # For the purposes of making this easier, genre does not need to be a factor;
 # the market basket analysis's sparse matrix will ignore factors anyway.
 setwd("..")
-genres <- read.csv("steamspy_data.csv", stringsAsFactors = FALSE, quote="\"")
-genres <- genres[c("appid", "genre")]
+genres <- read.csv("steam.csv", stringsAsFactors = FALSE, quote="\"")
+genres <- genres[c("appid", "genres")]
 
 # read all of the game review CSVs (7GB)
 setwd("newData")
@@ -28,9 +28,13 @@ for (name in list.files()){
     
   for(row in 1:nrow(temp)) {
       # join app ID with the steam spy data
-      genre <- subset(genres, appid == as.numeric(temp$appid), select=c("appid", "genre"))$genre[1]
-      # replace all commas in genre with a mishmash like "ActionAdventure" so as not to confuse the csv reader
-      genre <- gsub(",", "", genre)
+      #print(temp[row,]$appid)
+    
+      genre <- subset(genres, temp[row,]$appid == appid, select=c("genres"))$genres[1]
+      # replace all semicolons in genre with a mishmash like "ActionAdventure" so as not to confuse the apriori reader
+      genre <- gsub(";", "", genre)
+      
+      #print(paste("Genre of ", temp[row,]$appid, " is ", genre))
       
       if(!is.na(genre)) {
         # Easier way to analyze it: the transaction a user did is to review a game of X genre, Y genre, Z genre, etc.
